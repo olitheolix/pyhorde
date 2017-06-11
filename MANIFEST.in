@@ -1,0 +1,2 @@
+global-include *.pyx *.pxd *.*pp
+recursive-include pyhorde3d_res *
