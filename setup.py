@@ -115,7 +115,7 @@ def main():
         license="Apache Software License 2.0",
         keywords=['Python', 'Horde3D', 'DS2', 'DS2Server'],
         classifiers=[
-            'Development Status :: 1 - Beta',
+            'Development Status :: 4 - Beta',
             'Intended Audience :: Developers',
             'License :: OSI Approved :: Apache Software License',
             'Natural Language :: English',
