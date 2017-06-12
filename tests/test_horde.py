@@ -1,7 +1,6 @@
 import os
 import pytest
-import pyhorde
-import pyhorde3d_res
+import pyhorde3d
 
 
 # Will only be True if the `SkipHordeTests` environment variable exists and
@@ -37,7 +36,7 @@ class TestHorde:
             pass
 
         # Instantiate Horde and EGL context.
-        h = pyhorde.PyHorde3D()
+        h = pyhorde3d.PyHorde3D()
 
         # Create screenshot.
         assert not os.path.exists(fname)
@@ -47,10 +46,10 @@ class TestHorde:
     def test_add_find_resource(self):
         """Add and query a texture resource"""
         # Instantiate Horde and EGL context.
-        h = pyhorde.PyHorde3D()
+        h = pyhorde3d.PyHorde3D()
 
         # Load the image.
-        fname = os.path.dirname(os.path.abspath(pyhorde3d_res.__file__))
+        fname = os.path.dirname(os.path.abspath(pyhorde3d.__file__))
         fname = os.path.join(fname, 'models', 'cube', 'number.jpg')
         img = open(fname, 'rb').read()
 

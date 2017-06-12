@@ -109,7 +109,7 @@ def main():
         author="Oliver Nagy",
         author_email='olitheolix@gmail.com',
         url='https://github.com/olitheolix/pyhorde',
-        packages=['pyhorde3d_res'],
+        packages=['pyhorde3d'],
         include_package_data=True,
         license="Apache Software License 2.0",
         keywords=['Python', 'Horde3D', 'DS2', 'DS2Server'],
