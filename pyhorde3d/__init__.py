@@ -4,7 +4,7 @@ import pyhorde
 # This is the Cython wrapped engine.
 PyHorde3D = pyhorde.PyHorde3D
 
-__version__ == '0.1.3'
+__version__ = '0.1.3'
 
 
 def getResourceFolder():
