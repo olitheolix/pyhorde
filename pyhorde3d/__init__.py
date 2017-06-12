@@ -7,7 +7,7 @@ PyHorde3D = pyhorde.PyHorde3D
 __version__ = '0.1.3'
 
 
-def getResourceFolder():
+def getResourcePath():
     """ Return absolute path to default resources.
 
     The default resources are copies of those that ship with the original

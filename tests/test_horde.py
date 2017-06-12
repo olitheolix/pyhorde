@@ -49,7 +49,7 @@ class TestHorde:
         h = pyhorde3d.PyHorde3D()
 
         # Load the image.
-        res_path = pyhorde3d.getResourceFolder()
+        res_path = pyhorde3d.getResourcePath()
         fname = os.path.join(res_path, 'models', 'cube', 'number.jpg')
         img = open(fname, 'rb').read()
 
