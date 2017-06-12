@@ -194,15 +194,9 @@ cdef class PyHorde3D:
         )
 
     def __dealloc__(self):
-        self.shutdown()
-
-    def shutdown(self):
         h3dRelease()
         if self.eglDpy != NULL:
             releaseEGL(self.eglDpy)
-            self.eglDpy = NULL
-
-        self.keepalive = None
 
     def h3dScreenshotFile(self, str fname):
         cdef string c_fname = fname.encode('utf8')

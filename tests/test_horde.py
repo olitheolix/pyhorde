@@ -44,9 +44,6 @@ class TestHorde:
         h.h3dScreenshotFile(fname)
         assert os.path.exists(fname)
 
-        # Force shutdown of all resources (EGL context, Horde, etc.).
-        h.shutdown()
-
     def test_add_find_resource(self):
         """Add and query a texture resource"""
         # Instantiate Horde and EGL context.
