@@ -49,8 +49,8 @@ class TestHorde:
         h = pyhorde3d.PyHorde3D()
 
         # Load the image.
-        fname = os.path.dirname(os.path.abspath(pyhorde3d.__file__))
-        fname = os.path.join(fname, 'models', 'cube', 'number.jpg')
+        res_path = pyhorde3d.getResourceFolder()
+        fname = os.path.join(res_path, 'models', 'cube', 'number.jpg')
         img = open(fname, 'rb').read()
 
         # Verify that we do not yet have a 'foo' texture.
