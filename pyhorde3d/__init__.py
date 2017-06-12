@@ -4,6 +4,8 @@ import pyhorde
 # This is the Cython wrapped engine.
 PyHorde3D = pyhorde.PyHorde3D
 
+__version__ == '0.1.2'
+
 
 def getResourceFolder():
     """ Return absolute path to default resources.
