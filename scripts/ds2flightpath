@@ -1,0 +1,277 @@
+import os
+import random
+import pyhorde3d
+import PIL.Image
+import numpy as np
+import logging
+
+
+def getLogger(name):
+    """Return a custom logger object for DS2 functionality."""
+    # Return the logger object if it has handler (means we have already
+    # configured it).
+    logit = logging.getLogger(name)
+
+    # Specify the logging format.
+    fmt = (
+        '%(asctime)s|%(levelname)s|%(pathname)s:%(lineno)d:%(funcName)s'
+        ' (%(process)d)|%(message)s'
+    )
+    formatter = logging.Formatter(fmt)
+
+    # Configure our own handler (will send the log messages to Relays) and
+    # attach it to the logger object.
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    logit.addHandler(handler)
+    logit.setLevel(logging.DEBUG)
+    return logit
+
+
+class Engine(pyhorde3d.PyHorde3D):
+    def __init__(self, width: int, height: int):
+        # Initialise Horde.
+        super().__init__()
+
+        self.logit = getLogger('Horde3d')
+
+        # Sanity checks.
+        assert isinstance(width, int)
+        assert isinstance(height, int)
+
+        # No lights upon startup.
+        self.lights = {}
+        self.frameCnt = 0
+        self.models = {}
+        self.res = {}
+        self.skybox_node = None
+
+        self.cam = self.setupHorde()
+        self.resize(width, height)
+
+        self.logit.info('Initialised Horde')
+
+    def setupHorde(self):
+        # Global Horde options.
+        self.h3dSetOption(self.h3dOptions.LoadTextures, 1)
+        self.h3dSetOption(self.h3dOptions.TexCompression, 0)
+        self.h3dSetOption(self.h3dOptions.MaxAnisotropy, 4)
+        self.h3dSetOption(self.h3dOptions.ShadowMapSize, 2048)
+        self.h3dSetOption(self.h3dOptions.FastAnimation, 1)
+
+        # Define the resources that we will load manually.
+        rt = self.h3dResTypes
+        resources = [
+            ('base', rt.SceneGraph, 'models/platform/platform.scene.xml'),
+            ('sky', rt.SceneGraph, 'models/skybox/skybox_ds2.scene.xml'),
+            ('light', rt.Material, 'materials/light.material.xml'),
+            ('shader', rt.Pipeline, 'pipelines/deferred.pipeline.xml'),
+        ]
+        del rt
+
+        # Manually load the just listed resources.
+        path = pyhorde3d.getResourcePath()
+        self.resources = {}
+        for name, rtype, fname in resources:
+            res = self.h3dAddResource(rtype, name, 0)
+            self.resources[name] = res
+            fname = os.path.join(path, fname)
+            self.h3dLoadResource(res, open(fname, 'rb').read())
+
+        # Load all those resources whose name denotes a path (that includes
+        # shaders, light materials, etc.)
+        if not self.h3dUtLoadResourcesFromDisk(path):
+            self.logit.error('Could not load main resources')
+        else:
+            self.logit.info('Resources loaded')
+        del path
+
+        # Add the one and only camera Horde has. The minions will set its
+        # camera matrix to render the scenes for all DS2 cameras.
+        root = self.h3dRootNode
+        camera = self.h3dAddCameraNode(root, 'Camera', self.resources['shader'])
+
+        # Add skybox.
+        self.skybox_node = self.h3dAddNode(root, self.resources['sky'])
+        self.h3dSetNodeFlags(self.skybox_node, self.h3dNodeFlags.NoCastShadow, True)
+
+        # Add the platform.
+        platform = self.h3dAddNode(root, self.resources['base'])
+        self.h3dSetNodeTransform(platform, 0, -21, 0, 0, 0, 0, 1, .2, 1)
+        self.h3dUtDumpMessages()
+        return camera
+
+    def loadCubeResources(self):
+        rt = self.h3dResTypes
+        path = os.path.join(pyhorde3d.getResourcePath(), 'models', 'cube')
+
+        fname = os.path.join(path, 'cube.scene.xml')
+        scn_cube_xml_template = open(fname, 'r').read()
+        fname = os.path.join(path, 'cube.material.xml')
+        mat_cube_xml_template = open(fname, 'r').read()
+        del fname
+
+        for i in range(10):
+            res_name = f'cube_{i}'
+            mat_name = f'mat_cube_{i}'
+            scn_cube_xml = scn_cube_xml_template.replace(
+                'material="cube.material.xml"', f'material="{mat_name}"')
+            res = self.h3dAddResource(rt.SceneGraph, res_name, 0)
+            self.h3dLoadResource(res, scn_cube_xml.encode('utf8'))
+            self.res[res_name] = res
+            del res
+
+            mat_cube_xml = mat_cube_xml_template.replace('0.jpg', f'{i}.jpg')
+            res = self.h3dAddResource(rt.Material, mat_name, 0)
+            self.h3dLoadResource(res, mat_cube_xml.encode('utf8'))
+
+        if not self.h3dUtLoadResourcesFromDisk(path):
+            self.logit.error('Could not load cube resources')
+            return False
+        self.logit.info('Loaded all cube resources')
+        self.h3dUtDumpMessages()
+        return True
+
+    def addCubes(self, N=10):
+        names = list(self.res.keys())
+        for idx, name in enumerate(random.choices(names, k=N)):
+            node = self.h3dAddNode(self.h3dRootNode, self.res[name])
+            pos = 50 * np.random.uniform(-1, 1, 3)
+            euler = 180 * np.random.uniform(-1, 1, 3)
+            scale = 2 * np.ones(3)
+            self.h3dSetNodeTransform(node, *pos, *euler, *scale)
+            self.models[idx] = node
+
+    def addLights(self):
+        root = self.h3dRootNode
+        for i in range(2):
+            lname = f'Light{i}'
+            res = self.resources['light']
+            light = self.h3dAddLightNode(root, lname, res, "LIGHTING", "SHADOWMAP")
+            self.h3dSetNodeParamF(light, self.h3dLight.RadiusF, 0, 4000)
+            self.h3dSetNodeParamF(light, self.h3dLight.FovF, 0, 90)
+            self.h3dSetNodeParamI(light, self.h3dLight.ShadowMapCountI, 3)
+            self.h3dSetNodeParamF(light, self.h3dLight.ShadowSplitLambdaF, 0, 0.9)
+            self.h3dSetNodeParamF(light, self.h3dLight.ShadowMapBiasF, 0, 0.001)
+            self.h3dSetNodeParamF(light, self.h3dLight.ColorF3, 0, 1.0)
+            self.h3dSetNodeParamF(light, self.h3dLight.ColorF3, 1, 1.0)
+            self.h3dSetNodeParamF(light, self.h3dLight.ColorF3, 2, 1.0)
+
+            self.lights[lname] = light
+
+    def updateLight(self, name, pos):
+        #pos = np.array([0, 2000, 2000], np.float32)
+        tm = np.eye(4)
+        tm[2, :3] = pos / np.linalg.norm(pos)
+        tm[3, :3] = pos
+        tm = tm.flatten().astype(np.float32).tobytes()
+        tm = np.fromstring(tm, np.float32)
+        if tm.shape != (16, ):
+            self.logit.error(f'Invalid transform data for light <{name}>')
+            return
+
+        # Update light transformation.
+        self.h3dSetNodeTransMat(self.lights[name], tm)
+
+    def resize(self, width, height):
+        self.h3dSetNodeParamI(self.cam, self.h3dCamera.ViewportXI, 0)
+        self.h3dSetNodeParamI(self.cam, self.h3dCamera.ViewportYI, 0)
+        self.h3dSetNodeParamI(self.cam, self.h3dCamera.ViewportWidthI, width)
+        self.h3dSetNodeParamI(self.cam, self.h3dCamera.ViewportHeightI, height)
+
+        # Set virtual camera parameters
+        near, far = 0.1, 5000
+        self.h3dSetupCameraView(self.cam, 45.0, width / height, near, far)
+        self.h3dResizePipelineBuffers(self.resources['shader'], width, height)
+
+    def renderToImage(self):
+        self.frameCnt += 1
+
+        # Render scene
+        self.h3dRender(self.cam)
+        self.h3dFinalizeFrame()
+        self.h3dClearOverlays()
+
+        # Tell Horde to write the screenshot to memory.
+        self.h3dUtDumpMessages()
+
+        width, height = self.h3dScreenshotDimensions()
+        f32buf = np.zeros(width * height * 4, np.float32)
+        img_buf = np.zeros(width * height * 3, np.uint8)
+
+        assert self.h3dScreenshot(f32buf, img_buf)
+        img = np.zeros((width, height, 3), np.uint8)
+        img[:, :, 0] = img_buf[0::3].reshape(width, height)
+        img[:, :, 1] = img_buf[1::3].reshape(width, height)
+        img[:, :, 2] = img_buf[2::3].reshape(width, height)
+
+        return img
+
+    def renderScene(self, cmat, width, height):
+        assert isinstance(cmat, bytes)
+
+        # Center the SkyBox at the camera. The scale of the skybox is related
+        # to the `far` plane of the camera; it must be less than `far` /
+        # sqrt(3) to be fully visible.
+        pos = np.fromstring(cmat, np.float32).tolist()
+        pos = pos[-4:-1]
+        scale = 3 * [int(0.9 * 5000 / np.sqrt(3))]
+        self.h3dSetNodeTransform(self.skybox_node, *pos, 0, 0, 0, *scale)
+        del pos, scale
+
+        # Update the camera position.
+        self.h3dSetNodeTransMat(self.cam, np.fromstring(cmat, np.float32))
+
+        self.resize(width, height)
+        return self.renderToImage()
+
+
+def camVectorsToCamMatrix(right, up, pos):
+    if np.inner(right, up) > 1E-3:
+        return None
+
+    # Compute forward vector and assemble the rotation matrix.
+    forward = np.cross(right, up)
+    rot = np.vstack([right, up, forward])
+
+    ret = np.eye(4)
+    ret[:3, :3] = rot
+    ret[3, :3] = pos
+    ret = ret.astype(np.float32)
+    return ret.flatten('C').tobytes()
+
+
+def main():
+    h = Engine(256, 256)
+    h.addLights()
+    h.loadCubeResources()
+    h.addCubes(200)
+
+    dst_path = '/tmp/ds2'
+    try:
+        os.mkdir(dst_path)
+    except FileExistsError:
+        pass
+
+    N = 256
+    radius = 30
+    h.updateLight('Light1', 2000 * np.array([0, 1, 1], np.float32))
+
+    for idx, phi in enumerate(np.linspace(0, 2 * np.pi, N)):
+        # Compute the camera matrix for the current point on our trajectory.
+        pos = (radius * np.cos(phi), 20 * np.sin(phi), radius * np.sin(phi))
+        right = np.array([np.cos(3 * phi), 0, np.sin(3 * phi)])
+        cmat = camVectorsToCamMatrix(right=right, up=[0, 1, 0], pos=pos)
+        assert cmat is not None
+
+        # Render the scene to an image.
+        img = h.renderScene(cmat, 512, 512)
+
+        # Compress image to JPEG.
+        fname = f'{idx:04d}.jpg'
+        img = PIL.Image.fromarray(np.flipud(img))
+        img.save(os.path.join(dst_path, fname), 'jpeg', quality=90)
+
+
+if __name__ == '__main__':
+    main()
