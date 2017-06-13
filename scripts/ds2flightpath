@@ -247,7 +247,7 @@ def main():
     h.loadCubeResources()
     h.addCubes(200)
 
-    dst_path = '/tmp/ds2'
+    dst_path = os.path.join(os.getcwd(), 'flightpath')
     try:
         os.mkdir(dst_path)
     except FileExistsError:
