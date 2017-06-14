@@ -390,7 +390,7 @@ def renderFlightPath(param):
     del lname, pos, tm
 
     node = h.addNode(default_resources['base'])
-    h.setNodeTransPes(node, [0, 0, 0], [0, 0, 0], [0, 0, 0])
+    h.setNodeTransPes(node, [0, -21, 0], [0, 0, 0], [1, .2, 1])
     del node
 
     # Randomly populate the scene with cubes. Each cube is randomly chosen from
