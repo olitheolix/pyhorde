@@ -23,7 +23,7 @@ def parseCmdline():
     padd = parser.add_argument
 
     # Add the command line options.
-    padd('mode', choices=['flight', 'cubes', 'empty'],
+    padd('mode', choices=['flight', 'cubes'],
          help='Which content to render')
     padd('--skybox', action='store_true', help='Add a skybox to mimic space')
     padd('--dst-path', metavar='', type=str,
@@ -31,10 +31,10 @@ def parseCmdline():
          help='Where to write images')
     padd('--resolution', metavar='', type=str, default='256x256',
          help='Width x Height, eg "512x256"')
-    padd('--num-frames', metavar='', type=int, default=10,
+    padd('--num-images', metavar='', type=int, default=10,
          help='Number of images to render')
     padd('--num-cubes', metavar='', type=int, default=200,
-         help='Number of cubes (flight path mode only)')
+         help='Number of cubes in flight scene (only usefule in flight mode)')
 
     # Parse the actual arguments.
     param = parser.parse_args()
@@ -52,7 +52,7 @@ def parseCmdline():
         sys.exit()
 
     param.num_cubes = max(0, param.num_cubes)
-    param.num_frames = max(0, param.num_frames)
+    param.num_frames = max(0, param.num_images)
     return param
 
 
@@ -430,8 +430,6 @@ def main():
     if param.mode == 'flight':
         renderFlightPath(param)
     elif param.mode == 'cubes':
-        renderCubes(param)
-    elif param.mode == 'empty':
         renderCubes(param)
     elif param:
         assert False, f'Unknown mode <{param.mode}>'
