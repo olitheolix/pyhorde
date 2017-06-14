@@ -356,7 +356,7 @@ def renderCubes(param):
         # Convert right/up/pos into a camera matrix. Also, adjust the camera
         # distance to move it as close as possible without clipping the cube in
         # the rendered image. This is an empirical value.
-        distance = 10
+        distance = 4.5
         cmat = camVectorsToCamMatrix(right=right, up=up, pos=distance * pos)
         tmp = np.fromstring(cmat, np.float32).reshape(4, 4)[:3, :3]
         assert cmat is not None
