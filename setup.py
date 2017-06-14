@@ -111,6 +111,7 @@ def main():
         url='https://github.com/olitheolix/pyhorde',
         packages=['pyhorde3d'],
         include_package_data=True,
+        scripts=['scripts/ds2render'],
         license="Apache Software License 2.0",
         keywords=['Python', 'Horde3D', 'DS2', 'DS2Server'],
         platforms=["Linux"],
