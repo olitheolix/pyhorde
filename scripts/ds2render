@@ -200,7 +200,8 @@ class Engine(pyhorde3d.PyHorde3D):
         Each cube has the same geometry, but a different texture, one for each
         digit [0-9]. To respective resource names are eg 'cube_5'.
 
-        NOTE: this is a convenience method only.
+        NOTE: this is a convenience method to load the resources for the
+        platform and all cubes.
 
         Returns:
             dict: {cube_nr: handle}, where 'cube_nr' is an integer in [0, 9].
@@ -321,6 +322,7 @@ def renderCubes(param):
     h.setNodeTransMat(lname, tm.flatten().astype(np.float32).tobytes())
     del lname, pos, tm
 
+    # Make the platform invisible.
     dst_path = os.path.join(param.dst_path, 'cubes')
     h.h3dSetNodeTransform(default_resources['base'], 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
@@ -407,6 +409,7 @@ def renderFlightPath(param):
         h.setNodeTransPes(node, pos, euler, scale)
         del idx, cube_num, node, pos, euler, scale
 
+    # Move the camera through the scene and save each frame as a JPG file.
     for idx, phi in enumerate(np.linspace(0, 2 * np.pi, param.num_frames)):
         # Compute the next camera position on the (periodic) trajectory.
         pos = (30 * np.cos(phi), 20 * np.sin(phi), 30 * np.sin(phi))
