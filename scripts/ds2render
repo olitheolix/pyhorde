@@ -34,6 +34,8 @@ def parseCmdline():
          help='Number of images to render')
     padd('--num-cubes', metavar='', type=int, default=200,
          help='Number of cubes in flight scene (only usefule in flight mode)')
+    padd('--jpg-quality', metavar='', type=int, default=90,
+         help='JPEG quality (default=90)')
 
     # Parse the actual arguments.
     param = parser.parse_args()
@@ -380,7 +382,7 @@ def renderCubes(param):
             img = h.renderScene(cmat, skybox=False)
             img = PIL.Image.fromarray(np.flipud(img))
             fname = os.path.join(dst_path, f'{i:04d}.jpg')
-            img.save(fname, 'jpeg', quality=90)
+            img.save(fname, 'jpeg', quality=param.jpg_quality)
 
             # Set the scale to zero to make the cube invisible, because we only
             # want to see one cube in each image, not all 10.
@@ -441,7 +443,8 @@ def renderFlightPath(param):
 
         # Save the rendered image a JPG.
         img = PIL.Image.fromarray(np.flipud(img))
-        img.save(os.path.join(dst_path, f'{idx:04d}.jpg'), 'jpeg', quality=90)
+        img.save(os.path.join(dst_path, f'{idx:04d}.jpg'),
+                 'jpeg', quality=param.jpg_quality)
 
 
 def main():
