@@ -80,12 +80,15 @@ def getLogger(name):
 
 class Engine(pyhorde3d.PyHorde3D):
     def __init__(self, width=512, height=512):
+        self.logit = getLogger('Horde3d')
+        if width != height:
+            width = height = max(width, height)
+            self.logit.warning(f'Resolution must be square. Using {width}x{width}')
+
         # Initialise Horde.
         super().__init__(width, height)
 
         self.width, self.height = width, height
-
-        self.logit = getLogger('Horde3d')
 
         self.res_idx = 0
         self.frameCnt = 0
