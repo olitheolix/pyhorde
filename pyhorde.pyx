@@ -101,13 +101,13 @@ H3DCamera = namedtuple(
 
 
 cdef class PyHorde3D:
-    def __init__(self):
+    def __init__(self, width, height):
         # The actual engine (will not be created in this ctor but a dedicated
         # method since EGL needs to be initialised first).
         self.eglDpy = NULL
 
         # Create OpenGL context and initialise Horde.
-        self.eglDpy = initEGL(512, 512)
+        self.eglDpy = initEGL(width, height)
         assert self.eglDpy != NULL
         assert h3dInit() is True
 

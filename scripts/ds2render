@@ -81,7 +81,7 @@ def getLogger(name):
 class Engine(pyhorde3d.PyHorde3D):
     def __init__(self, width=512, height=512):
         # Initialise Horde.
-        super().__init__()
+        super().__init__(width, height)
 
         self.width, self.height = width, height
 
