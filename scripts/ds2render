@@ -1,6 +1,5 @@
 import os
 import sys
-import random
 import argparse
 import textwrap
 import pyhorde3d
@@ -413,7 +412,7 @@ def renderFlightPath(param):
     # Randomly populate the scene with cubes. Each cube is randomly chosen from
     # the set of the 10 default cubes, and placed at a random position.
     names = list(range(10))
-    for idx, cube_num in enumerate(random.choices(names, k=param.num_cubes)):
+    for idx, cube_num in enumerate(np.random.choice(names, param.num_cubes)):
         # Add the node to the scene.
         node = h.addNode(default_resources[cube_num])
 
@@ -446,6 +445,9 @@ def renderFlightPath(param):
 
 
 def main():
+    # Ensure the image sequence is repeatable.
+    np.random.seed(0)
+
     param = parseCmdline()
     if param.mode == 'flight':
         renderFlightPath(param)
