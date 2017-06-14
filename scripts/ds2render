@@ -430,8 +430,8 @@ def renderFlightPath(param):
         # Compute the next camera position on the (periodic) trajectory.
         pos = (30 * np.cos(phi), 20 * np.sin(phi), 30 * np.sin(phi))
 
-        # Rotate the camera. Again, this is also based on trigonometric to
-        # create a smooth and periodic trajectory.
+        # Rotate the camera. Again, this is also based on trigonometric
+        # functions to create a smooth and periodic trajectory.
         right = np.array([np.cos(3 * phi), 0, np.sin(3 * phi)])
         cmat = camVectorsToCamMatrix(right=right, up=[0, 1, 0], pos=pos)
         assert cmat is not None
