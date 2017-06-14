@@ -326,41 +326,55 @@ def renderCubes(param):
     dst_path = os.path.join(param.dst_path, 'cubes')
     h.h3dSetNodeTransform(default_resources['base'], 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
+    # Add all 10 cubes and set their size to zero to make them invisible.
     nodes = {}
     for i in range(10):
         nodes[i] = h.addNode(default_resources[i])
         h.setNodeTransPes(nodes[i], [0, 0, 0], [0, 0, 0], [0, 0, 0])
 
+    # Create a random orientation for the cube, a random position for the
+    # camera (but always pointed to the center), render each of the
+    # ten cube, and save each in their own file. Repeat this process as many
+    # times as was specified in the --num-images argument.
     for i in range(5):
-        # Camera.
+        # Compute a random position on the unit sphere.
         phi, theta = np.random.uniform(-1, 1, 2) * [2 * np.pi, np.pi]
         pos = np.array([
             np.sin(theta) * np.cos(phi),
             np.sin(theta) * np.sin(phi),
             np.cos(theta),
         ])
+
+        # Compute a random right/up vector that is orthogonal to the position
+        # vector, since that one specifies the forward vector.
         tmp = np.random.uniform(-1, 1, 3)
         tmp = tmp / np.linalg.norm(tmp)
         right = tmp - np.inner(tmp, pos) * pos
         right = right / np.linalg.norm(right)
         up = -np.cross(right, pos)
 
+        # Convert right/up/pos into a camera matrix. Also, adjust the camera
+        # distance to move it as close as possible without clipping the cube in
+        # the rendered image. This is an empirical value.
         distance = 10
         cmat = camVectorsToCamMatrix(right=right, up=up, pos=distance * pos)
         tmp = np.fromstring(cmat, np.float32).reshape(4, 4)[:3, :3]
         assert cmat is not None
         del phi, theta, pos, right, up, distance, tmp
 
-        # Cube.
+        # Compute random orientation of cube. Every cube will have the same
+        # orientation.
         u = np.linalg.svd(np.random.uniform(-1, 1, size=(3, 3)))[0]
         tm = camVectorsToCamMatrix(right=u[0], up=u[1], pos=[0, 0, 0])
         assert tm is not None
         del u
 
+        # Render each cube into a file.
         for j in range(10):
             dst_path = os.path.join(param.dst_path, f'{j:02d}')
             os.makedirs(dst_path, exist_ok=True)
 
+            # Apply the transform to the current cube.
             h.setNodeTransMat(nodes[j], tm)
 
             # Render the scene to an image.
@@ -368,6 +382,9 @@ def renderCubes(param):
             img = PIL.Image.fromarray(np.flipud(img))
             fname = os.path.join(dst_path, f'{i:04d}.jpg')
             img.save(fname, 'jpeg', quality=90)
+
+            # Set the scale to zero to make the cube invisible, because we only
+            # want to see one cube in each image, not all 10.
             h.setNodeTransPes(nodes[j], [0, 0, 0], [0, 0, 0], [0, 0, 0])
             del j, img
         del tm
