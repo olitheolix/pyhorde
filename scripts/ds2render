@@ -232,8 +232,8 @@ class Engine(pyhorde3d.PyHorde3D):
             res = self.h3dAddResource(rt.Material, mat_name, 0)
             self.h3dLoadResource(res, mat_cube_xml.encode('utf8'))
 
-        # Add the platform to the scene.
-        ret['base'] = self.h3dAddNode(self.h3dRootNode, self.resources['base'])
+        # Add the platform resource.
+        ret['base'] = self.resources['base']
 
         if not self.h3dUtLoadResourcesFromDisk(path):
             self.logit.error('Could not load cube resources')
