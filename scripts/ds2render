@@ -336,7 +336,7 @@ def renderCubes(param):
     # camera (but always pointed to the center), render each of the
     # ten cube, and save each in their own file. Repeat this process as many
     # times as was specified in the --num-images argument.
-    for i in range(5):
+    for i in range(param.num_images):
         # Compute a random position on the unit sphere.
         phi, theta = np.random.uniform(-1, 1, 2) * [2 * np.pi, np.pi]
         pos = np.array([
