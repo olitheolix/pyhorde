@@ -419,40 +419,38 @@ def renderFlightPath(param):
     h.setNodeTransPes(node, [0, -21, 0], [0, 0, 0], [1, .2, 1])
     del node
 
-    # Randomly populate the scene with cubes. Each cube is randomly chosen from
-    # the set of the 10 default cubes, and placed at a random position.
-    names = list(range(10))
-    for idx, cube_num in enumerate(np.random.choice(names, param.num_cubes)):
-        # Add the node to the scene.
-        node = h.addNode(default_resources[cube_num])
+    # Draw the number of each cube at random.
+    cube_num = np.random.choice(np.arange(10), param.num_cubes)
 
-        # Pick the node parameters (position, orientation, and scale).
-        pos = 50 * np.random.uniform(-1, 1, 3)
-        euler = 180 * np.random.uniform(-1, 1, 3)
-        scale = 2 * np.ones(3)
+    # Create random positions and orientations for each cube.
+    cube_pos = 50 * np.random.uniform(-1, 1, size=(param.num_cubes, 3))
+    cube_rot = 180 * np.random.uniform(-1, 1, size=(param.num_cubes, 3))
 
-        # Apply the transform to the current cube.
-        h.setNodeTransPes(node, pos, euler, scale)
-        del idx, cube_num, node, pos, euler, scale
+    # Each cube has the same size in the scene.
+    scale = 2 * np.ones(3)
 
-    # Move the camera through the scene and save each frame as a JPG file.
-    for idx, phi in enumerate(np.linspace(0, 2 * np.pi, param.num_frames)):
-        # Compute the next camera position on the (periodic) trajectory.
+    # Create a flight path, that is, create the camera- position and vectors.
+    # To ensure a "smooth" path that also connects the end to the beginning, we
+    # will use trigonometric functions only.
+    cam_mat = []
+    for phi in np.linspace(0, 2 * np.pi, param.num_frames):
         pos = (30 * np.cos(phi), 20 * np.sin(phi), 30 * np.sin(phi))
-
-        # Rotate the camera. Again, this is also based on trigonometric
-        # functions to create a smooth and periodic trajectory.
         right = np.array([np.cos(3 * phi), 0, np.sin(3 * phi)])
         cmat = camVectorsToCamMatrix(right=right, up=[0, 1, 0], pos=pos)
-        assert cmat is not None
+        cam_mat.append(cmat)
 
-        # Change the resolution, then render the scene.
+    # Add each cube to the scene and set its transform.
+    for idx, (pos, rot, num) in enumerate(zip(cube_pos, cube_rot, cube_num)):
+        node = h.addNode(default_resources[num])
+        h.setNodeTransPes(node, pos, rot, scale)
+
+    # Move the camera through the scene and save each frame as a JPG file.
+    for idx, cmat in enumerate(cam_mat):
         img = h.renderScene(cmat, param.width, param.height)
-
-        # Save the rendered image a JPG.
         img = PIL.Image.fromarray(np.flipud(img))
         img.save(os.path.join(dst_path, f'{idx:04d}.jpg'),
                  'jpeg', quality=param.jpg_quality)
+    print(f'Saved flight path images to <{dst_path}>')
 
 
 def main():
