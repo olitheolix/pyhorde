@@ -101,13 +101,15 @@ H3DCamera = namedtuple(
 
 
 cdef class PyHorde3D:
-    def __init__(self, width, height):
+    def __init__(self):
         # The actual engine (will not be created in this ctor but a dedicated
         # method since EGL needs to be initialised first).
         self.eglDpy = NULL
 
-        # Create OpenGL context and initialise Horde.
-        self.eglDpy = initEGL(width, height)
+        # Create OpenGL context and initialise Horde. The initial resolution of
+        # 128x128 is just because we need an initial resolution. We may
+        # afterwards change the resolution freely.
+        self.eglDpy = initEGL(128, 128)
         assert self.eglDpy != NULL
         assert h3dInit() is True
 

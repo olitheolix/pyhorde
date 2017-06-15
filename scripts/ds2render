@@ -81,13 +81,11 @@ def getLogger(name):
 
 
 class Engine(pyhorde3d.PyHorde3D):
-    def __init__(self, width=512, height=512):
+    def __init__(self):
         self.logit = getLogger('Horde3d')
 
         # Initialise Horde.
-        super().__init__(width, height)
-
-        self.width, self.height = width, height
+        super().__init__()
 
         self.res_idx = 0
         self.frameCnt = 0
@@ -193,7 +191,6 @@ class Engine(pyhorde3d.PyHorde3D):
         # Add the camera. Note: there will only be a single camera.
         root = self.h3dRootNode
         camera = self.h3dAddCameraNode(root, 'Camera', self.resources['shader'])
-        self._setRenderSize(camera, self.width, self.height)
 
         # Add the skybox to the scene.
         self.models['skybox'] = self.h3dAddNode(root, self.resources['sky'])
@@ -283,8 +280,11 @@ class Engine(pyhorde3d.PyHorde3D):
     def setNodeTransPes(self, node, pos, euler, scale):
         self.h3dSetNodeTransform(node, *pos, *euler, *scale)
 
-    def renderScene(self, cmat, skybox=True):
+    def renderScene(self, cmat, width, height, skybox=True):
         assert isinstance(cmat, bytes)
+
+        assert width > 0 and height > 0
+        self._setRenderSize(self.cam, width, height)
 
         # Center the SkyBox at the camera. The scale of the skybox is related
         # to the `far` plane of the camera; it must be less than `far` /
@@ -319,7 +319,7 @@ def camVectorsToCamMatrix(right, up, pos):
 
 
 def renderCubes(param):
-    h = Engine(param.width, param.height)
+    h = Engine()
     default_resources = h.loadDefaultResources()
 
     # Add a default light. Then place it far away to mimic a sun.
@@ -387,7 +387,7 @@ def renderCubes(param):
             h.setNodeTransMat(nodes[j], tm)
 
             # Render the scene to an image.
-            img = h.renderScene(cmat, skybox=False)
+            img = h.renderScene(cmat, param.width, param.height, skybox=False)
             img = PIL.Image.fromarray(np.flipud(img))
             fname = os.path.join(dst_path, f'{i:04d}.jpg')
             img.save(fname, 'jpeg', quality=param.jpg_quality)
@@ -403,7 +403,7 @@ def renderFlightPath(param):
     dst_path = os.path.join(param.dst_path, 'flightpath')
     os.makedirs(dst_path, exist_ok=True)
 
-    h = Engine(param.width, param.height)
+    h = Engine()
     default_resources = h.loadDefaultResources()
 
     # Add a default light. Then place it far away to mimic a sun.
@@ -447,7 +447,7 @@ def renderFlightPath(param):
         assert cmat is not None
 
         # Change the resolution, then render the scene.
-        img = h.renderScene(cmat)
+        img = h.renderScene(cmat, param.width, param.height)
 
         # Save the rendered image a JPG.
         img = PIL.Image.fromarray(np.flipud(img))
