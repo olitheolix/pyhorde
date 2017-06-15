@@ -121,23 +121,33 @@ class Engine(pyhorde3d.PyHorde3D):
     def _renderToImage(self):
         self.frameCnt += 1
 
-        # Render scene
+        # Render the scene.
         self.h3dRender(self.cam)
         self.h3dFinalizeFrame()
         self.h3dClearOverlays()
 
-        # Tell Horde to write the screenshot to memory.
+        # Update log file, in case some
         self.h3dUtDumpMessages()
 
+        # Query the size of the last screenshot, so that we can allocate a
+        # buffer into which Horde can copy the data from the GPU. We will need
+        # to allocate two buffer. The fact that we need two is an
+        # implementation detail. FYI: the floating point one will hold the RGBA
+        # image data (float values in [0, 1]). The C++ code will unpack the
+        # RGBA data into our second RGB buffer, and convert it to uint8 in the
+        # process. Some NumPy magic would have been just as efficient, and one
+        # day I will fix it.
         width, height = self.h3dScreenshotDimensions()
         f32buf = np.zeros(width * height * 4, np.float32)
         img_buf = np.zeros(width * height * 3, np.uint8)
 
+        # Request the screenshot data and unpack it into the usual
+        # Height x Width x 3 format.
         assert self.h3dScreenshot(f32buf, img_buf)
-        img = np.zeros((width, height, 3), np.uint8)
-        img[:, :, 0] = img_buf[0::3].reshape(width, height)
-        img[:, :, 1] = img_buf[1::3].reshape(width, height)
-        img[:, :, 2] = img_buf[2::3].reshape(width, height)
+        img = np.zeros((height, width, 3), np.uint8)
+        img[:, :, 0] = img_buf[0::3].reshape(height, width)
+        img[:, :, 1] = img_buf[1::3].reshape(height, width)
+        img[:, :, 2] = img_buf[2::3].reshape(height, width)
         return img
 
     def setupHorde(self):
