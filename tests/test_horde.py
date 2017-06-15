@@ -28,7 +28,7 @@ class TestHorde:
         pass
 
     def test_create_image(self):
-        # Delete stale screenshot.
+        # Delete any stale screenshot.
         fname = '/tmp/foobar.tga'
         try:
             os.remove(fname)
@@ -36,7 +36,7 @@ class TestHorde:
             pass
 
         # Instantiate Horde and EGL context.
-        h = pyhorde3d.PyHorde3D()
+        h = pyhorde3d.PyHorde3D(512, 512)
 
         # Create screenshot.
         assert not os.path.exists(fname)
@@ -46,11 +46,11 @@ class TestHorde:
     def test_add_find_resource(self):
         """Add and query a texture resource"""
         # Instantiate Horde and EGL context.
-        h = pyhorde3d.PyHorde3D()
+        h = pyhorde3d.PyHorde3D(512, 512)
 
         # Load the image.
         res_path = pyhorde3d.getResourcePath()
-        fname = os.path.join(res_path, 'models', 'cube', 'number.jpg')
+        fname = os.path.join(res_path, 'models', 'cube', 'textures', '0.jpg')
         img = open(fname, 'rb').read()
 
         # Verify that we do not yet have a 'foo' texture.
