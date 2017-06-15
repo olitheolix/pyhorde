@@ -176,7 +176,7 @@ class Engine(pyhorde3d.PyHorde3D):
         ]
         del rt
 
-        # Manually load the resources just above.
+        # Manually load the resources specified above.
         path = pyhorde3d.getResourcePath()
         self.resources.clear()
         for name, rtype, fname in resources:
