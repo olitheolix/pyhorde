@@ -34,7 +34,7 @@ def parseCmdline():
     padd('--num-images', metavar='', type=int, default=10,
          help='Number of images to render')
     padd('--num-cubes', metavar='', type=int, default=200,
-         help='Number of cubes in flight scene (only usefule in flight mode)')
+         help='Number of cubes in flight scene (only useful in flight mode)')
     padd('--jpg-quality', metavar='', type=int, default=90,
          help='JPEG quality (default=90)')
 
