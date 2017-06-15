@@ -103,7 +103,7 @@ def main():
 
     setup(
         name='pyhorde',
-        version='0.2.0',
+        version='0.2.1',
         description="Wrapper for Horde3D",
         long_description="",
         author="Oliver Nagy",
