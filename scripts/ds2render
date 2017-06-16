@@ -507,10 +507,10 @@ def renderFlightPath(param):
 
     # Move the camera through the scene and save each frame as a JPG file.
     for idx, cmat in enumerate(cam_mat):
-        fname = os.path.join(dst_path, f'{idx:04d}.jpg')
+        fname = f'{idx:04d}.jpg'
         img = h.renderScene(cmat, param.width, param.height)
         img = PIL.Image.fromarray(np.flipud(img))
-        img.save(fname, 'jpeg', quality=param.jpg_quality)
+        img.save(os.path.join(dst_path, fname), 'jpeg', quality=param.jpg_quality)
         pos, labels, bb_hlen = projectCubePositions(param, cmat, cube_num, cube_pos)
         meta['projected'][fname] = {'pos': pos, 'labels': labels, 'hlen': bb_hlen}
 
