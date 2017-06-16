@@ -37,6 +37,8 @@ def parseCmdline():
          help='Number of cubes in flight scene (only useful in flight mode)')
     padd('--jpg-quality', metavar='', type=int, default=90,
          help='JPEG quality (default=90)')
+    padd('--seed', metavar='', type=int, default=0,
+         help='Seed value to ensure reproducible scenes')
 
     # Parse the actual arguments.
     param = parser.parse_args()
@@ -418,6 +420,9 @@ def renderFlightPath(param):
     node = h.addNode(default_resources['base'])
     h.setNodeTransPes(node, [0, -21, 0], [0, 0, 0], [1, .2, 1])
     del node
+
+    # Initialise the random generator to ensure reproducible results.
+    np.random.seed(param.seed)
 
     # Draw the number of each cube at random.
     cube_num = np.random.choice(np.arange(10), param.num_cubes)
