@@ -1,6 +1,7 @@
 #!env python
 import os
 import sys
+import pickle
 import argparse
 import textwrap
 import pyhorde3d
@@ -456,6 +457,21 @@ def renderFlightPath(param):
         img.save(os.path.join(dst_path, f'{idx:04d}.jpg'),
                  'jpeg', quality=param.jpg_quality)
     print(f'Saved flight path images to <{dst_path}>')
+
+    # Compile meta information for the scene and pickle it to a file.
+    meta = {
+        'seed': param.seed,
+        'width': param.width,
+        'height': param.height,
+        'num_frame': param.num_frames,
+        'num_cubes': param.num_cubes,
+        'cam_mat': cam_mat,
+        'cube_pos': cube_pos,
+        'cube_rot': cube_rot,
+        'cube_num': cube_num,
+    }
+    fname = os.path.join(dst_path, 'meta.pickle')
+    pickle.dump(meta, open(fname, 'wb'))
 
 
 def main():
