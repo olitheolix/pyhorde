@@ -326,6 +326,40 @@ def camVectorsToCamMatrix(right, up, pos):
     return ret.flatten('C').tobytes()
 
 
+def projectCubePositions(param, cmat, labels, cube_pos):
+    fov = param.fov / 2
+    fov = np.tan(fov * np.pi / 180)
+    aspect_ratio = param.width / param.height
+
+    cmat = np.fromstring(cmat, np.float32).reshape(4, 4)
+    assert cmat.shape == (4, 4)
+
+    tmp = (cube_pos - cmat[3, :3]) @ cmat[:3, :3].T
+    x, y, z = tmp[:, 0], tmp[:, 1], tmp[:, 2]
+    z = -z
+    del tmp, cmat
+
+    idx = np.nonzero(z > 0.1)
+    x, y, z, labels = x[idx], y[idx], z[idx], labels[idx]
+
+    x = x / (z * fov * aspect_ratio)
+    y = y / (z * fov)
+
+    bound = 1.05
+    cond_x = (-bound < x) & (x < bound)
+    cond_y = (-bound < y) & (y < bound)
+    idx = np.nonzero(cond_x & cond_y)
+    x, y, z, labels = x[idx], y[idx], z[idx], labels[idx]
+    del bound, cond_x, cond_y, idx
+
+    x = (x + 1) / 2
+    y = 1 - (y + 1) / 2
+
+    pos = np.vstack([x, y, z]).T
+    bb_hlen = np.vstack([4 / (aspect_ratio * z), 4 / z]).T
+    return pos, labels, bb_hlen
+
+
 def renderCubes(param):
     h = Engine(param.fov)
     default_resources = h.loadDefaultResources()
@@ -407,73 +441,6 @@ def renderCubes(param):
         del tm
 
 
-def computeCubePositions():
-    """
-    todo:
-       - save near/far place
-       - save (and use) fov in this method.
-       - incorporate aspect ratio
-    """
-    meta = pickle.load(open('img/flightpath/meta.pickle', 'rb'))
-    fnames = glob.glob('img/flightpath/*.jpg')
-    fnames.sort()
-    assert len(fnames) == len(meta['cam_mat'])
-    width, height = meta['width'], meta['height']
-
-    fov = np.tan(np.pi / 8)
-
-    for fname, cmat in zip(fnames, meta['cam_mat']):
-        labels = np.array(meta['cube_num'])
-
-        cmat = np.fromstring(cmat, np.float32).reshape(4, 4)
-        assert cmat.shape == (4, 4)
-
-        tmp = (meta['cube_pos'] - cmat[3, :3]) @ cmat[:3, :3].T
-        x, y, z = tmp[:, 0], tmp[:, 1], tmp[:, 2]
-        z = -z
-        del tmp, cmat
-
-        idx = np.nonzero(z > 0.1)
-        x, y, z, labels = x[idx], y[idx], z[idx], labels[idx]
-
-        x = x / (z * fov)
-        y = y / (z * fov)
-
-        bound = 1.05
-        cond_x = (-bound < x) & (x < bound)
-        cond_y = (-bound < y) & (y < bound)
-        idx = np.nonzero(cond_x & cond_y)
-        x, y, z, labels = x[idx], y[idx], z[idx], labels[idx]
-        del bound, cond_x, cond_y, idx
-
-        x = width * (x + 1) / 2
-        y = height * (1 - (y + 1) / 2)
-        x = x.astype(np.int32)
-        y = y.astype(np.int32)
-
-        bbox_hlen = (2000 / z).astype(np.int32)
-
-        vx, vy, vz = x, y, z
-        del x, y, z
-        if len(vx) == 0:
-            continue
-
-        img = Image.open(fname)
-        img = np.array(img, np.uint8)
-        for x, y, z, label, hlen in zip(vx, vy, vz, labels, bbox_hlen):
-            x0, x1 = max(0, x - hlen), min(width, x + hlen)
-            y0, y1 = max(0, y - hlen), min(height, y + hlen)
-            if x0 == x1 or y0 == y1:
-                continue
-            bak = np.array(img[y0:y1, x0:x1, :])
-            img[y0:y1, x0:x1, :] = 100
-
-            bak = bak[1:-1, 1:-1, :]
-            img[y0+1:y1-1, x0+1:x1-1, :] = bak
-
-        Image.fromarray(img).convert('RGB').save(fname)
-
-
 def renderFlightPath(param):
     dst_path = os.path.join(param.dst_path, 'flightpath')
     os.makedirs(dst_path, exist_ok=True)
@@ -523,17 +490,10 @@ def renderFlightPath(param):
         node = h.addNode(default_resources[num])
         h.setNodeTransPes(node, pos, rot, scale)
 
-    # Move the camera through the scene and save each frame as a JPG file.
-    for idx, cmat in enumerate(cam_mat):
-        img = h.renderScene(cmat, param.width, param.height)
-        img = PIL.Image.fromarray(np.flipud(img))
-        img.save(os.path.join(dst_path, f'{idx:04d}.jpg'),
-                 'jpeg', quality=param.jpg_quality)
-    print(f'Saved flight path images to <{dst_path}>')
-
     # Compile meta information for the scene and pickle it to a file.
     meta = {
         'seed': param.seed,
+        'fov': param.fov,
         'width': param.width,
         'height': param.height,
         'num_frame': param.num_frames,
@@ -542,7 +502,20 @@ def renderFlightPath(param):
         'cube_pos': cube_pos,
         'cube_rot': cube_rot,
         'cube_num': cube_num,
+        'projected': {},
     }
+
+    # Move the camera through the scene and save each frame as a JPG file.
+    for idx, cmat in enumerate(cam_mat):
+        fname = os.path.join(dst_path, f'{idx:04d}.jpg')
+        img = h.renderScene(cmat, param.width, param.height)
+        img = PIL.Image.fromarray(np.flipud(img))
+        img.save(fname, 'jpeg', quality=param.jpg_quality)
+        pos, labels, bb_hlen = projectCubePositions(param, cmat, cube_num, cube_pos)
+        meta['projected'][fname] = {'pos': pos, 'labels': labels, 'hlen': bb_hlen}
+
+    print(f'Saved flight path images to <{dst_path}>')
+
     fname = os.path.join(dst_path, 'meta.pickle')
     pickle.dump(meta, open(fname, 'wb'))
 
