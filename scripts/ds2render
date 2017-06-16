@@ -41,6 +41,8 @@ def parseCmdline():
          help='JPEG quality (default=90)')
     padd('--seed', metavar='', type=int, default=0,
          help='Seed value to ensure reproducible scenes')
+    padd('--fov', metavar='', type=int, default=45,
+         help='Field of view of camera')
 
     # Parse the actual arguments.
     param = parser.parse_args()
@@ -85,8 +87,9 @@ def getLogger(name):
 
 
 class Engine(pyhorde3d.PyHorde3D):
-    def __init__(self):
+    def __init__(self, fov=45):
         self.logit = getLogger('Horde3d')
+        self.fov = fov
 
         # Initialise Horde.
         super().__init__()
@@ -114,7 +117,7 @@ class Engine(pyhorde3d.PyHorde3D):
 
         # Set virtual camera parameters
         near, far = 0.1, 5000
-        self.h3dSetupCameraView(cam, 45.0, width / height, near, far)
+        self.h3dSetupCameraView(cam, self.fov, width / height, near, far)
         self.h3dResizePipelineBuffers(self.resources['shader'], width, height)
 
     def _renderToImage(self):
@@ -324,7 +327,7 @@ def camVectorsToCamMatrix(right, up, pos):
 
 
 def renderCubes(param):
-    h = Engine()
+    h = Engine(param.fov)
     default_resources = h.loadDefaultResources()
 
     # Add a default light. Then place it far away to mimic a sun.
@@ -475,7 +478,7 @@ def renderFlightPath(param):
     dst_path = os.path.join(param.dst_path, 'flightpath')
     os.makedirs(dst_path, exist_ok=True)
 
-    h = Engine()
+    h = Engine(param.fov)
     default_resources = h.loadDefaultResources()
 
     # Add a default light. Then place it far away to mimic a sun.
