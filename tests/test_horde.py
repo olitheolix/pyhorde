@@ -36,7 +36,7 @@ class TestHorde:
             pass
 
         # Instantiate Horde and EGL context.
-        h = pyhorde3d.PyHorde3D()
+        h = pyhorde3d.PyHorde3D(width=512, height=512)
 
         # Create screenshot.
         assert not os.path.exists(fname)
@@ -46,7 +46,7 @@ class TestHorde:
     def test_add_find_resource(self):
         """Add and query a texture resource"""
         # Instantiate Horde and EGL context.
-        h = pyhorde3d.PyHorde3D()
+        h = pyhorde3d.PyHorde3D(width=512, height=512)
 
         # Load the image.
         res_path = pyhorde3d.getResourcePath()

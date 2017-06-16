@@ -87,12 +87,12 @@ def getLogger(name):
 
 
 class Engine(pyhorde3d.PyHorde3D):
-    def __init__(self, fov=45):
+    def __init__(self, width, height, fov=45):
         self.logit = getLogger('Horde3d')
         self.fov = fov
 
         # Initialise Horde.
-        super().__init__()
+        super().__init__(width, height)
 
         self.res_idx = 0
         self.frameCnt = 0
@@ -361,7 +361,7 @@ def projectCubePositions(param, cmat, labels, cube_pos):
 
 
 def renderCubes(param):
-    h = Engine(param.fov)
+    h = Engine(param.width, param.height, param.fov)
     default_resources = h.loadDefaultResources()
 
     # Add a default light. Then place it far away to mimic a sun.
@@ -445,7 +445,7 @@ def renderFlightPath(param):
     dst_path = os.path.join(param.dst_path, 'flightpath')
     os.makedirs(dst_path, exist_ok=True)
 
-    h = Engine(param.fov)
+    h = Engine(param.width, param.height, param.fov)
     default_resources = h.loadDefaultResources()
 
     # Add a default light. Then place it far away to mimic a sun.
