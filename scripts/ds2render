@@ -1,4 +1,12 @@
 #!env python
+"""
+Render training- or fligh images into a user specified folder.
+
+Run this script with the -h option to see the possible render scenarios. Most
+notable, these include a flight path along a fixed trajectory ("flight"), or
+training images ("cubes" and "background").
+"""
+
 import os
 import sys
 import pickle
@@ -14,7 +22,12 @@ import numpy as np
 def parseCmdline():
     """Parse the command line arguments."""
     description = textwrap.dedent(f'''\
-        Use Horde3D to render DS2 related assets.
+        Render DS2 related assets.
+
+        Examples:
+          ds2render --num-images 200 --num-cubes 300 flight
+          ds2render --num-images 20 cubes
+          ds2render --num-images 20 --resolution 512x512 background
     ''')
 
     # Create a parser and program description.
@@ -362,6 +375,17 @@ def projectCubePositions(param, cmat, labels, cube_pos):
 
 
 def renderGroundTruthCubes(param):
+    """Render each of the ten cubes from different angles.
+
+    The angles are chosen at random, but are identical for all cubes.
+
+    The scene is devoid of other objects and has no skybox. In other words,
+    each image contains exactly one cube in the centre, and the background is
+    pure black.
+
+    Args:
+        param (namespace): command line parameters returned by argparse
+    """
     h = Engine(param.width, param.height, param.fov)
     default_resources = h.loadDefaultResources()
 
@@ -444,6 +468,13 @@ def renderGroundTruthCubes(param):
 
 
 def renderGroundTruthBackground(param):
+    """Render a scene devoid of cubes from random angles/positions.
+
+    The scene still comprises the skybox and a randomly placed platform.
+
+    Args:
+        param (namespace): command line parameters returned by argparse
+    """
     h = Engine(param.width, param.height, param.fov)
     default_resources = h.loadDefaultResources()
 
@@ -487,6 +518,17 @@ def renderGroundTruthBackground(param):
 
 
 def renderFlightPath(param):
+    """Populate the scene with cubes and render a virtual flight through it.
+
+    This will also produce a meta.pickle file in the destination folder
+    (specified on the command line). This file contains meta information about
+    the scene, most notable the location and label of each cube as seen on the
+    respective frame.
+
+    Args:
+        param (namespace): command line parameters returned by argparse
+    """
+    # Ensure the target directory exists.
     dst_path = os.path.join(param.dst_path, 'flightpath')
     os.makedirs(dst_path, exist_ok=True)
 
@@ -502,6 +544,7 @@ def renderFlightPath(param):
     h.setNodeTransMat(lname, tm.flatten().astype(np.float32).tobytes())
     del lname, pos, tm
 
+    # Add the platform.
     node = h.addNode(default_resources['base'])
     h.setNodeTransPes(node, [0, -21, 0], [0, 0, 0], [1, .2, 1])
     del node
@@ -556,13 +599,15 @@ def renderFlightPath(param):
         img = h.renderScene(cmat, param.width, param.height)
         img = PIL.Image.fromarray(np.flipud(img))
         img.save(os.path.join(dst_path, fname), 'jpeg', quality=param.jpg_quality)
+
+        # Save the screen coordinate of all visible cubes.
         pos, labels, bb_hlen = projectCubePositions(param, cmat, cube_num, cube_pos)
         meta['projected'][fname] = {'pos': pos, 'labels': labels, 'hlen': bb_hlen}
 
-    print(f'Saved flight path images to <{dst_path}>')
-
+    # Save the meta information.
     fname = os.path.join(dst_path, 'meta.pickle')
     pickle.dump(meta, open(fname, 'wb'))
+    print(f'Saved flight path images to <{dst_path}>')
 
 
 def main():
