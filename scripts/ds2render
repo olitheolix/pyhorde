@@ -2,12 +2,13 @@
 import os
 import sys
 import pickle
+import logging
 import argparse
 import textwrap
 import pyhorde3d
 import PIL.Image
+
 import numpy as np
-import logging
 
 
 def parseCmdline():
@@ -197,7 +198,8 @@ class Engine(pyhorde3d.PyHorde3D):
 
         # Add the skybox to the scene.
         self.models['skybox'] = self.h3dAddNode(root, self.resources['sky'])
-        self.h3dSetNodeFlags(self.models['skybox'], self.h3dNodeFlags.NoCastShadow, True)
+        self.h3dSetNodeFlags(
+            self.models['skybox'], self.h3dNodeFlags.NoCastShadow, True)
 
         # Update Horde's log file.
         self.h3dUtDumpMessages()
@@ -478,6 +480,7 @@ def renderFlightPath(param):
 
     # Add a default light. Then place it far away to mimic a sun.
     lname = h.addLight()
+        del phi, pos, right, cmat
     pos = 2000 * np.array([0, 1, 1], np.float32)
     tm = np.eye(4)
     tm[2, :3] = pos / np.linalg.norm(pos)
