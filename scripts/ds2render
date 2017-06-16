@@ -25,7 +25,7 @@ def parseCmdline():
     padd = parser.add_argument
 
     # Add the command line options.
-    padd('mode', choices=['flight', 'cubes'],
+    padd('mode', choices=['flight', 'cubes', 'background'],
          help='Which content to render')
     padd('--skybox', action='store_true', help='Add a skybox to mimic space')
     padd('--dst-path', metavar='', type=str,
@@ -286,6 +286,7 @@ class Engine(pyhorde3d.PyHorde3D):
         return self.h3dSetNodeTransMat(node, np.fromstring(tm, np.float32))
 
     def setNodeTransPes(self, node, pos, euler, scale):
+        assert len(pos) == len(euler) == len(scale) == 3
         self.h3dSetNodeTransform(node, *pos, *euler, *scale)
 
     def renderScene(self, cmat, width, height, skybox=True):
@@ -360,7 +361,7 @@ def projectCubePositions(param, cmat, labels, cube_pos):
     return pos, labels, bb_hlen
 
 
-def renderCubes(param):
+def renderGroundTruthCubes(param):
     h = Engine(param.width, param.height, param.fov)
     default_resources = h.loadDefaultResources()
 
@@ -439,6 +440,50 @@ def renderCubes(param):
             h.setNodeTransPes(nodes[j], [0, 0, 0], [0, 0, 0], [0, 0, 0])
             del j, img
         del tm
+    print(f'Saved pure cube images to <{dst_path}>')
+
+
+def renderGroundTruthBackground(param):
+    h = Engine(param.width, param.height, param.fov)
+    default_resources = h.loadDefaultResources()
+
+    # Ensure the target directory exists.
+    dst_path = os.path.join(param.dst_path, 'background')
+    os.makedirs(dst_path, exist_ok=True)
+
+    # Add a default light. Then place it far away to mimic a sun.
+    lname = h.addLight()
+    pos = 2000 * np.array([0, 1, 1], np.float32)
+    tm = np.eye(4)
+    tm[2, :3] = pos / np.linalg.norm(pos)
+    tm[3, :3] = pos
+    h.setNodeTransMat(lname, tm.flatten().astype(np.float32).tobytes())
+    del lname, pos, tm
+
+    # Add the platform.
+    platform = h.addNode(default_resources['base'])
+
+    # Render the empty scenes from several random angles/positions.
+    for i in range(param.num_images):
+        pos = 50 * np.random.uniform(-1, 1, 3)
+        euler = 180 * np.random.uniform(-1, 1, 3)
+        scale = 1 * np.random.uniform(0, 1, 3)
+        h.setNodeTransPes(platform, pos.tolist(), euler.tolist(), scale.tolist())
+        del pos, euler, scale
+
+        # Compute random right/up/position vector for camera.
+        u, _, _ = np.linalg.svd(np.random.uniform(-1, 1, size=(3, 3)))
+        pos = 100 * np.random.uniform(-1, 1, 3)
+        cmat = camVectorsToCamMatrix(right=u[0], up=u[1], pos=pos)
+        assert cmat is not None
+        del u
+
+        # Render the scene and save the image.
+        img = h.renderScene(cmat, param.width, param.height, skybox=True)
+        img = PIL.Image.fromarray(np.flipud(img))
+        fname = os.path.join(dst_path, f'{i:04d}.jpg')
+        img.save(fname, 'jpeg', quality=param.jpg_quality)
+    print(f'Saved background images to <{dst_path}>')
 
 
 def renderFlightPath(param):
@@ -528,7 +573,9 @@ def main():
     if param.mode == 'flight':
         renderFlightPath(param)
     elif param.mode == 'cubes':
-        renderCubes(param)
+        renderGroundTruthCubes(param)
+    elif param.mode == 'background':
+        renderGroundTruthBackground(param)
     elif param:
         assert False, f'Unknown mode <{param.mode}>'
 
