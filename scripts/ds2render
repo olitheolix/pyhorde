@@ -450,7 +450,6 @@ def renderFlightPath(param):
 
     # Add a default light. Then place it far away to mimic a sun.
     lname = h.addLight()
-        del phi, pos, right, cmat
     pos = 2000 * np.array([0, 1, 1], np.float32)
     tm = np.eye(4)
     tm[2, :3] = pos / np.linalg.norm(pos)
@@ -484,6 +483,7 @@ def renderFlightPath(param):
         right = np.array([np.cos(3 * phi), 0, np.sin(3 * phi)])
         cmat = camVectorsToCamMatrix(right=right, up=[0, 1, 0], pos=pos)
         cam_mat.append(cmat)
+        del phi, pos, right, cmat
 
     # Add each cube to the scene and set its transform.
     for idx, (pos, rot, num) in enumerate(zip(cube_pos, cube_rot, cube_num)):
