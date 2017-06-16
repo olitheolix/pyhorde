@@ -407,6 +407,7 @@ def computeCubePositions():
     todo:
        - save near/far place
        - save (and use) fov in this method.
+       - incorporate aspect ratio
     """
     meta = pickle.load(open('img/flightpath/meta.pickle', 'rb'))
     fnames = glob.glob('img/flightpath/*.jpg')
@@ -417,44 +418,55 @@ def computeCubePositions():
     fov = np.tan(np.pi / 8)
 
     for fname, cmat in zip(fnames, meta['cam_mat']):
+        labels = np.array(meta['cube_num'])
+
         cmat = np.fromstring(cmat, np.float32).reshape(4, 4)
         assert cmat.shape == (4, 4)
 
-        found = []
-        for pos in meta['cube_pos']:
-            x, y, z = (pos - cmat[3, :3]) @ cmat[:3, :3].T
-            z = -z
-            if z < .1:
+        tmp = (meta['cube_pos'] - cmat[3, :3]) @ cmat[:3, :3].T
+        x, y, z = tmp[:, 0], tmp[:, 1], tmp[:, 2]
+        z = -z
+        del tmp, cmat
+
+        idx = np.nonzero(z > 0.1)
+        x, y, z, labels = x[idx], y[idx], z[idx], labels[idx]
+
+        x = x / (z * fov)
+        y = y / (z * fov)
+
+        bound = 1.05
+        cond_x = (-bound < x) & (x < bound)
+        cond_y = (-bound < y) & (y < bound)
+        idx = np.nonzero(cond_x & cond_y)
+        x, y, z, labels = x[idx], y[idx], z[idx], labels[idx]
+        del bound, cond_x, cond_y, idx
+
+        x = width * (x + 1) / 2
+        y = height * (1 - (y + 1) / 2)
+        x = x.astype(np.int32)
+        y = y.astype(np.int32)
+
+        bbox_hlen = (2000 / z).astype(np.int32)
+
+        vx, vy, vz = x, y, z
+        del x, y, z
+        if len(vx) == 0:
+            continue
+
+        img = Image.open(fname)
+        img = np.array(img, np.uint8)
+        for x, y, z, label, hlen in zip(vx, vy, vz, labels, bbox_hlen):
+            x0, x1 = max(0, x - hlen), min(width, x + hlen)
+            y0, y1 = max(0, y - hlen), min(height, y + hlen)
+            if x0 == x1 or y0 == y1:
                 continue
+            bak = np.array(img[y0:y1, x0:x1, :])
+            img[y0:y1, x0:x1, :] = 100
 
-            x = x / (z * fov)
-            y = y / (z * fov)
+            bak = bak[1:-1, 1:-1, :]
+            img[y0+1:y1-1, x0+1:x1-1, :] = bak
 
-            bound = 1.05
-            if not ((-bound <= x <= bound) and (-bound <= y <= bound)):
-                continue
-            del bound
-
-            x = int(width * (x + 1) / 2)
-            y = height - int(height * (y + 1) / 2)
-            found.append((x, y, z))
-
-        if len(found) > 0:
-            img = Image.open(fname)
-            img = np.array(img, np.uint8)
-            for x, y, z in found:
-                ofs = int(2000 / z)
-                x0, x1 = max(0, x - ofs), min(width, x + ofs)
-                y0, y1 = max(0, y - ofs), min(height, y + ofs)
-                if x0 == x1 or y0 == y1:
-                    continue
-                bak = np.array(img[y0:y1, x0:x1, :])
-                img[y0:y1, x0:x1, :] = 100
-
-                bak = bak[1:-1, 1:-1, :]
-                img[y0+1:y1-1, x0+1:x1-1, :] = bak
-
-            Image.fromarray(img).convert('RGB').save(fname)
+        Image.fromarray(img).convert('RGB').save(fname)
 
 
 def renderFlightPath(param):
