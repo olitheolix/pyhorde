@@ -90,8 +90,8 @@ def main():
 
     ext_modules = [
         Extension(
-            name='pyhorde',
-            sources=['cython/pyhorde.pyx', 'cython/glutils.cpp'],
+            name='pyhorde_cython',
+            sources=['cython/pyhorde_cython.pyx', 'cython/glutils.cpp'],
             include_dirs=[os.path.join(sys.prefix, 'include')],
             library_dirs=[os.path.join(sys.prefix, 'lib')],
             libraries=['Horde3D', 'Horde3DUtils', 'EGL'],
@@ -102,7 +102,7 @@ def main():
     ]
 
     setup(
-        name='pyhorde',
+        name='pyhorde_cython',
         version='0.4.0',
         description="Wrapper for Horde3D",
         long_description="",

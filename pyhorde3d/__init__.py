@@ -1,26 +1,28 @@
 import os
-import pyhorde
+import pyhorde_cython
 
 __version__ = '0.4.0'
 
 
 # This is the Cython wrapped engine.
-PyHorde3D = pyhorde.Engine
+PyHorde3D = pyhorde_cython.Engine
 
-createEGLContext = pyhorde.createEGLContext
-releaseEGLContext = pyhorde.releaseEGLContext
+# Create/release EGL context for headless rendering.
+createEGLContext = pyhorde_cython.createEGLContext
+releaseEGLContext = pyhorde_cython.releaseEGLContext
 
-h3dCamera = pyhorde.h3dCamera
-h3dEmitter = pyhorde.h3dEmitter
-h3dLight = pyhorde.h3dLight
-h3dModelUpdateFlags = pyhorde.h3dModelUpdateFlags
-h3dNodeFlags = pyhorde.h3dNodeFlags
-h3dNodeTypes = pyhorde.h3dNodeTypes
-h3dOptions = pyhorde.h3dOptions
-h3dPartEffRes = pyhorde.h3dPartEffRes
-h3dRenderDevice = pyhorde.h3dRenderDevice
-h3dResTypes = pyhorde.h3dResTypes
-h3dRootNode = pyhorde.h3dRootNode
+# Horde3D constants.
+h3dCamera = pyhorde_cython.h3dCamera
+h3dEmitter = pyhorde_cython.h3dEmitter
+h3dLight = pyhorde_cython.h3dLight
+h3dModelUpdateFlags = pyhorde_cython.h3dModelUpdateFlags
+h3dNodeFlags = pyhorde_cython.h3dNodeFlags
+h3dNodeTypes = pyhorde_cython.h3dNodeTypes
+h3dOptions = pyhorde_cython.h3dOptions
+h3dPartEffRes = pyhorde_cython.h3dPartEffRes
+h3dRenderDevice = pyhorde_cython.h3dRenderDevice
+h3dResTypes = pyhorde_cython.h3dResTypes
+h3dRootNode = pyhorde_cython.h3dRootNode
 
 
 def getResourcePath():

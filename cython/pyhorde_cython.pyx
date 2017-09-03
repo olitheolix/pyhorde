@@ -1,4 +1,4 @@
-cimport pyhorde
+cimport pyhorde_cython
 from types import SimpleNamespace
 
 # Expose Horde3D constants.
