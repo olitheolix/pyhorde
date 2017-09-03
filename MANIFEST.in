@@ -1,4 +1,4 @@
 global-include *.pyx *.pxd *.*pp
 global-exclude pyhorde.cpp
 
-recursive-include pyhorde3d *
+recursive-include pyhorde *
