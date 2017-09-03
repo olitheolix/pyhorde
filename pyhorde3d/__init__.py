@@ -7,6 +7,10 @@ PyHorde3D = pyhorde.PyHorde3D
 __version__ = '0.4.0'
 
 
+createEGLContext = pyhorde.createEGLContext
+releaseEGLContext = pyhorde.releaseEGLContext
+
+
 def getResourcePath():
     """ Return absolute path to default resources.
 

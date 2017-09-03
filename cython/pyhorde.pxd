@@ -196,7 +196,6 @@ cdef extern from "glutils.hpp":
 
 cdef class PyHorde3D:
     cdef object keepalive
-    cdef EGLDisplay eglDpy
     cdef readonly h3dRootNode
     cdef readonly h3dOptions
     cdef readonly h3dResTypes

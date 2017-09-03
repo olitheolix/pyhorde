@@ -138,17 +138,21 @@ H3DCamera = namedtuple(
 )
 
 
+cpdef createEGLContext(width, height):
+    cdef EGLDisplay eglDpy = initEGL(width, height)
+    cdef unsigned long c_handle = <unsigned long>eglDpy
+    assert eglDpy != NULL
+    return int(c_handle)
+
+
+cpdef releaseEGLContext(ctx):
+    cdef EGLDisplay eglDpy = <EGLDisplay>ctx
+    releaseEGL(eglDpy)
+
+
 cdef class PyHorde3D:
     def __init__(self, width=512, height=512, int GLVersion=2):
-        # The actual engine will not be created in this ctor but a dedicated
-        # method since EGL needs to be initialised first.
-        self.eglDpy = NULL
-
-        # Create OpenGL context and initialise Horde.
-        self.eglDpy = initEGL(width, height)
-        assert self.eglDpy != NULL
-
-        # Initialise Horde engine with correct OpenGL version.
+        # Initialise Horde engine with selected OpenGL version.
         if GLVersion == 2:
             assert h3dInit(OpenGL2) is True
         elif GLVersion == 4:
@@ -270,15 +274,10 @@ cdef class PyHorde3D:
         )
 
     def __dealloc__(self):
-        if self.eglDpy != NULL:
-            h3dRelease()
-            releaseEGL(self.eglDpy)
-            self.eglDpy = NULL
+        h3dRelease()
 
     def shutdown(self):
-        if self.eglDpy != NULL:
-            h3dRelease()
-            releaseEGL(self.eglDpy)
+        h3dRelease()
 
     def h3dScreenshotFile(self, str fname):
         cdef string c_fname = fname.encode('utf8')
