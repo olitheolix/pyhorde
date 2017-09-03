@@ -2,6 +2,44 @@ from collections import namedtuple
 cimport pyhorde
 
 
+H3DRenderDevice = namedtuple('H3DRenderDevice', 'OpenGL2 OpenGL4')
+H3DModelUpdateFlags = namedtuple('H3DModelUpdateFlags', 'Animation Geometry')
+
+H3DEmitter = namedtuple(
+    'H3DEmmitter',
+    (
+        'MatResI '
+        'PartEffResI '
+        'MaxCountI '
+        'RespawnCountI '
+        'DelayF '
+        'EmmissionRateF '
+        'SpreadAngleF '
+        'ForceF3 '
+    )
+)
+
+
+H3DPartEffRes = namedtuple(
+    'H3DPartEffRes',
+    (
+	    'ParticleElem '
+	    'ChanMoveVelElem '
+	    'ChanRotVelElem '
+	    'ChanSizeElem '
+	    'ChanColRElem '
+	    'ChanColGElem '
+	    'ChanColBElem '
+	    'ChanColAElem '
+	    'PartLifeMinF '
+	    'PartLifeMaxF '
+	    'ChanStartMinF '
+	    'ChanStartMaxF '
+	    'ChanEndRateF '
+	    'ChanDragElem '
+    )
+)
+
 H3DOptions = namedtuple(
     'H3DOptions',
     (
@@ -101,22 +139,30 @@ H3DCamera = namedtuple(
 
 
 cdef class PyHorde3D:
-    def __init__(self, width=512, height=512):
-        # The actual engine (will not be created in this ctor but a dedicated
-        # method since EGL needs to be initialised first).
+    def __init__(self, width=512, height=512, int GLVersion=2):
+        # The actual engine will not be created in this ctor but a dedicated
+        # method since EGL needs to be initialised first.
         self.eglDpy = NULL
 
-        # Create OpenGL context and initialise Horde. The initial resolution of
-        # 128x128 is just because we need an initial resolution. We may
-        # afterwards change the resolution freely.
+        # Create OpenGL context and initialise Horde.
         self.eglDpy = initEGL(width, height)
         assert self.eglDpy != NULL
-        assert h3dInit() is True
+
+        # Initialise Horde engine with correct OpenGL version.
+        if GLVersion == 2:
+            assert h3dInit(OpenGL2) is True
+        elif GLVersion == 4:
+            assert h3dInit(OpenGL4) is True
+        else:
+            print('OpenGL version must be either 2 or 4')
+            assert False
 
         # Root node to Horde3D scene.
         self.h3dRootNode = H3DRootNode
 
         # Expose constants to Python.
+        self.h3dRenderDevice = H3DRenderDevice(OpenGL2, OpenGL4)
+        self.h3dModelUpdateFlags = H3DModelUpdateFlags(Animation, Geometry)
         self.h3dOptions = H3DOptions(
             MaxLogLevel,
             MaxNumMessages,
@@ -195,9 +241,43 @@ cdef class PyHorde3D:
 		    OccCullingI,
         )
 
+        self.h3dPartEffRes = H3DPartEffRes(
+	        ParticleElem,
+	        ChanMoveVelElem,
+	        ChanRotVelElem,
+	        ChanSizeElem,
+	        ChanColRElem,
+	        ChanColGElem,
+	        ChanColBElem,
+	        ChanColAElem,
+	        PartLifeMinF,
+	        PartLifeMaxF,
+	        ChanStartMinF,
+	        ChanStartMaxF,
+	        ChanEndRateF,
+	        ChanDragElem,
+        )
+
+        self.h3dEmitter = H3DEmitter(
+            MatResI,
+            PartEffResI,
+            MaxCountI,
+            RespawnCountI,
+            DelayF,
+            EmissionRateF,
+            SpreadAngleF,
+            ForceF3,
+        )
+
     def __dealloc__(self):
-        h3dRelease()
         if self.eglDpy != NULL:
+            h3dRelease()
+            releaseEGL(self.eglDpy)
+            self.eglDpy = NULL
+
+    def shutdown(self):
+        if self.eglDpy != NULL:
+            h3dRelease()
             releaseEGL(self.eglDpy)
 
     def h3dScreenshotFile(self, str fname):
@@ -217,7 +297,7 @@ cdef class PyHorde3D:
     def h3dRemoveNode(self, H3DNode node):
         h3dRemoveNode(node)
 
-    def h3dAddCameraNode(self, H3DNode parent, str name, H3DRes pipelineRes ):
+    def h3dAddCameraNode(self, H3DNode parent, str name, H3DRes pipelineRes):
         cdef string s = name.encode('utf8')
         return h3dAddCameraNode(parent, s.c_str(), pipelineRes)
 
@@ -275,11 +355,11 @@ cdef class PyHorde3D:
     def h3dRender(self, H3DNode cameraNode):
         return h3dRender(cameraNode)
 
-    def h3dResizePipelineBuffers(self, H3DRes pipeRes, int width, int height ):
+    def h3dResizePipelineBuffers(self, H3DRes pipeRes, int width, int height):
         return h3dResizePipelineBuffers(pipeRes, width, height)
 
     def h3dSetupCameraView(self, H3DNode cameraNode, float fov, float aspect,
-                        float nearDist, float farDist ):
+                        float nearDist, float farDist):
         return h3dSetupCameraView(cameraNode, fov, aspect,
                         nearDist, farDist)
 
@@ -295,16 +375,11 @@ cdef class PyHorde3D:
         h3dutGetScreenshotParam(&width, &height)
         return width, height
 
-    def h3dScreenshot(self, float[:] f32buf, unsigned char[:] ui8buf):
+    def h3dScreenshot(self, unsigned char[:] ui8buf):
         cdef int width, height;
         h3dutGetScreenshotParam(&width, &height)
-        assert len(f32buf) == width * height * 4
         assert len(ui8buf) == width * height * 3
-
-        return h3dutScreenshotRaw(
-            <char*?>(&f32buf[0]), len(f32buf) * sizeof(float),
-            &ui8buf[0], len(ui8buf)
-        )
+        return h3dutScreenshotRaw(&ui8buf[0], len(ui8buf))
 
     def h3dCloneResource(self, H3DRes res, str name):
         cdef string c_name = name.encode('utf8')
@@ -324,10 +399,13 @@ cdef class PyHorde3D:
     def h3dGetNextResource(self, rtype, H3DRes start):
         return h3dGetNextResource(rtype, start)
 
-    def h3dFindNodes(self, H3DNode startNode, char *name, int rtype):
+    def h3dFindNodes(self, H3DNode startNode, str name, int rtype):
         tmp = name.encode('utf8')
         cdef char *c_name = tmp
         return h3dFindNodes(startNode, c_name, rtype)
+
+    def h3dGetNodeFindResult(self, int index):
+        return h3dGetNodeFindResult(index)
 
     def h3dGetNodeChild(self, H3DNode node, int index):
         return h3dGetNodeChild(node, index)
@@ -343,3 +421,42 @@ cdef class PyHorde3D:
 
     def h3dSetNodeFlags(self, H3DNode node, int flags, bint recursive):
         h3dSetNodeFlags(node, flags, recursive)
+
+    def h3dCheckNodeVisibility(self, H3DNode node, H3DNode camera):
+        return h3dCheckNodeVisibility(node, camera, True, False)
+
+    def h3dSetMaterialUniform(self, H3DRes res, str name,
+                              float a, float b, float c, float d):
+        tmp = name.encode('utf8')
+        cdef char *c_name = tmp
+        h3dSetMaterialUniform(res, c_name, a, b, c, d)
+
+    def h3dAddEmitterNode(self, H3DNode parent, str name, H3DRes materialRes,
+                          H3DRes particleEffectRes, int maxParticleCount,
+                          int respawnCount):
+        tmp = name.encode('utf8')
+        cdef char *c_name = tmp
+        return h3dAddEmitterNode(
+            parent, c_name, materialRes, particleEffectRes,
+            maxParticleCount, respawnCount)
+
+    def h3dUpdateEmitter(self, H3DNode emitterNode, float timeDelta):
+        h3dUpdateEmitter(emitterNode, timeDelta)
+
+    def h3dHasEmitterFinished(self, H3DNode emitterNode):
+        return h3dHasEmitterFinished(emitterNode)
+
+    def h3dUpdateModel(self, H3DNode modelNode, int flags):
+        h3dUpdateModel(modelNode, flags)
+
+    def h3dSetupModelAnimStage(self, H3DNode modelNode, int stage, H3DRes animationRes,
+                               int layer, str startNode, bint additive):
+        tmp = startNode.encode('utf8')
+        cdef char *c_startNode = tmp
+        return h3dSetupModelAnimStage(
+            modelNode, stage, animationRes, layer, c_startNode, additive)
+
+    def h3dGetNodeAABB(self, H3DNode node):
+        cdef float x0, y0, z0, x1, y1, z1
+        h3dGetNodeAABB(node, &x0, &y0, &z0, &x1, &y1, &z1)
+        return (x0, y0, z0, x1, y1, z1)

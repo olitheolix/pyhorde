@@ -77,21 +77,21 @@ def main():
     distutils.ccompiler.CCompiler.compile = parallelCCompile
 
     if not isHordeInstalled():
-        p = sys.prefix
-        print('\nHorde3D does not appear to be installed.')
-        print('Install it as follows:')
-        print(' >> git clone https://github.com/olitheolix/Horde3D')
-        print(' >> mkdir -p Horde3D/build')
-        print(' >> cd Horde3D/build')
-        print(' >> git checkout ds2')
-        print(f' >> cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX={p}')
-        print(' >> make install')
+        print('\n' + '-' * 80)
+        print(f'Error: Cannot find Horde3D libraries. Install them as follows:\n')
+        print(f' $ git clone https://github.com/horde3d/Horde3D.git')
+        print(f' $ mkdir -p Horde3D/build')
+        print(f' $ cd Horde3D/build')
+        print(f' $ git checkout 8b17e8bc6f0169303ee5a1021aaee072a76db180')
+        print(f' $ cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX={sys.prefix}')
+        print(f' $ make install')
+        print(f'\n' + '-' * 80 + '\n')
         sys.exit(1)
 
     ext_modules = [
         Extension(
             name='pyhorde',
-            sources=['pyhorde.pyx', 'glutils.cpp'],
+            sources=['cython/pyhorde.pyx', 'cython/glutils.cpp'],
             include_dirs=[os.path.join(sys.prefix, 'include')],
             library_dirs=[os.path.join(sys.prefix, 'lib')],
             libraries=['Horde3D', 'Horde3DUtils', 'EGL'],
@@ -112,9 +112,9 @@ def main():
         packages=['pyhorde3d'],
         include_package_data=True,
         scripts=['scripts/ds2render'],
-        license="Apache Software License 2.0",
+        license='Apache Software License 2.0',
         keywords=['Python', 'Horde3D', 'DS2', 'DS2Server'],
-        platforms=["Linux"],
+        platforms=['Linux'],
         classifiers=[
             'Development Status :: 4 - Beta',
             'Intended Audience :: Developers',
