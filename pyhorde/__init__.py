@@ -5,7 +5,7 @@ __version__ = '0.4.0'
 
 
 # This is the Cython wrapped engine.
-PyHorde3D = pyhorde_cython.Engine
+Engine = pyhorde_cython.Engine
 
 # Create/release EGL context for headless rendering.
 createEGLContext = pyhorde_cython.createEGLContext

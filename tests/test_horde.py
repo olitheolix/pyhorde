@@ -97,7 +97,7 @@ class TestHorde:
         # Instantiate EGL context and Horde.
         width = height = 512
         eglDpy = pyhorde.createEGLContext(width, height)
-        h = pyhorde.PyHorde3D(width, height, GLVersion=2)
+        h = pyhorde.Engine(width, height, GLVersion=2)
 
         # Create screenshot and release EGL context.
         assert not os.path.exists(fname)
@@ -110,7 +110,7 @@ class TestHorde:
         # Instantiate EGL context and Horde.
         width = height = 512
         eglDpy = pyhorde.createEGLContext(width, height)
-        h = pyhorde.PyHorde3D(width, height, GLVersion=2)
+        h = pyhorde.Engine(width, height, GLVersion=2)
 
         # Load the texture image.
         res_path = pyhorde.getResourcePath()
@@ -138,7 +138,7 @@ class TestHorde:
         # Instantiate EGL context and Horde.
         width = height = 512
         eglDpy = pyhorde.createEGLContext(width, height)
-        h = pyhorde.PyHorde3D(width, height, GLVersion=2)
+        h = pyhorde.Engine(width, height, GLVersion=2)
 
         # Setup the scene.
         cam = self.setupHorde(h, width, height)
