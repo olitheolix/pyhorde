@@ -34,11 +34,11 @@ class Horde3DWidget(QOpenGLWidget):
     def resizeGL(self, width, height):
         cam, horde = self.cam, self.horde
         if horde is not None:
-            horde.h3dSetNodeParamI(cam, horde.h3dCamera.ViewportXI, 0)
-            horde.h3dSetNodeParamI(cam, horde.h3dCamera.ViewportYI, 0)
-            horde.h3dSetNodeParamI(cam, horde.h3dCamera.ViewportWidthI, width)
-            horde.h3dSetNodeParamI(cam, horde.h3dCamera.ViewportHeightI, height)
-            horde.h3dSetNodeParamI(cam, horde.h3dCamera.OccCullingI, 0)
+            horde.h3dSetNodeParamI(cam, pyhorde3d.h3dCamera.ViewportXI, 0)
+            horde.h3dSetNodeParamI(cam, pyhorde3d.h3dCamera.ViewportYI, 0)
+            horde.h3dSetNodeParamI(cam, pyhorde3d.h3dCamera.ViewportWidthI, width)
+            horde.h3dSetNodeParamI(cam, pyhorde3d.h3dCamera.ViewportHeightI, height)
+            horde.h3dSetNodeParamI(cam, pyhorde3d.h3dCamera.OccCullingI, 0)
 
             # Camera parameters.
             fov, near, far = 45, 0.1, 5000
@@ -47,14 +47,14 @@ class Horde3DWidget(QOpenGLWidget):
 
     def setupHorde(self, h, width, height):
         # Global Horde options.
-        h.h3dSetOption(h.h3dOptions.LoadTextures, 1)
-        h.h3dSetOption(h.h3dOptions.TexCompression, 0)
-        h.h3dSetOption(h.h3dOptions.MaxAnisotropy, 4)
-        h.h3dSetOption(h.h3dOptions.ShadowMapSize, 2048)
-        h.h3dSetOption(h.h3dOptions.FastAnimation, 1)
+        h.h3dSetOption(pyhorde3d.h3dOptions.LoadTextures, 1)
+        h.h3dSetOption(pyhorde3d.h3dOptions.TexCompression, 0)
+        h.h3dSetOption(pyhorde3d.h3dOptions.MaxAnisotropy, 4)
+        h.h3dSetOption(pyhorde3d.h3dOptions.ShadowMapSize, 2048)
+        h.h3dSetOption(pyhorde3d.h3dOptions.FastAnimation, 1)
 
         # Define the resources that we will load manually.
-        rt = h.h3dResTypes
+        rt = pyhorde3d.h3dResTypes
         res_raw = [
             ('light', rt.Material, 'materials/light.material.xml'),
             ('HDR', rt.Material, 'pipelines/postHDR.material.xml'),
@@ -84,14 +84,14 @@ class Horde3DWidget(QOpenGLWidget):
         del res_path
 
         # Add the platform.
-        base = h.h3dAddNode(h.h3dRootNode, self.resources['base'])
+        base = h.h3dAddNode(pyhorde3d.h3dRootNode, self.resources['base'])
         h.h3dSetNodeTransform(base, 0, 1000, 0, 0, 0, 0, 1, 1, 1)
         del base
 
         # Add the skybox to the scene and scale it.
         s = int(0.9 * 5000 / 1.7)
-        skybox = h.h3dAddNode(h.h3dRootNode, self.resources['sky'])
-        h.h3dSetNodeFlags(skybox, h.h3dNodeFlags.NoCastShadow, True)
+        skybox = h.h3dAddNode(pyhorde3d.h3dRootNode, self.resources['sky'])
+        h.h3dSetNodeFlags(skybox, pyhorde3d.h3dNodeFlags.NoCastShadow, True)
         h.h3dSetNodeTransform(skybox, 0, 0, 0, 0, 0, 0, s, s, s)
         del skybox, s
 
@@ -102,7 +102,7 @@ class Horde3DWidget(QOpenGLWidget):
         h.h3dSetMaterialUniform(res, 'hdrBrightOffset', 0.08, 0, 0, 0)
 
         # Add the camera.
-        cam = h.h3dAddCameraNode(h.h3dRootNode, 'Camera', self.resources['shader'])
+        cam = h.h3dAddCameraNode(pyhorde3d.h3dRootNode, 'Camera', self.resources['shader'])
 
         # Update Horde's log file.
         h.h3dUtDumpMessages()

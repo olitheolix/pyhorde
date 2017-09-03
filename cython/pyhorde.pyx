@@ -1,140 +1,108 @@
-from collections import namedtuple
 cimport pyhorde
+from types import SimpleNamespace
 
-
-H3DRenderDevice = namedtuple('H3DRenderDevice', 'OpenGL2 OpenGL4')
-H3DModelUpdateFlags = namedtuple('H3DModelUpdateFlags', 'Animation Geometry')
-
-H3DEmitter = namedtuple(
-    'H3DEmmitter',
-    (
-        'MatResI '
-        'PartEffResI '
-        'MaxCountI '
-        'RespawnCountI '
-        'DelayF '
-        'EmmissionRateF '
-        'SpreadAngleF '
-        'ForceF3 '
-    )
+# Expose Horde3D constants.
+h3dRootNode = H3DRootNode
+h3dRenderDevice = SimpleNamespace(OpenGL2=OpenGL2, OpenGL4=OpenGL4)
+h3dModelUpdateFlags = SimpleNamespace(Animation=Animation, Geometry=Geometry)
+h3dOptions = SimpleNamespace(
+    MaxLogLevel=MaxLogLevel,
+    MaxNumMessages=MaxNumMessages,
+    TrilinearFiltering=TrilinearFiltering,
+    MaxAnisotropy=MaxAnisotropy,
+    TexCompression=TexCompression,
+    SRGBLinearization=SRGBLinearization,
+    LoadTextures=LoadTextures,
+    FastAnimation=FastAnimation,
+    ShadowMapSize=ShadowMapSize,
+    SampleCount=SampleCount,
+    WireframeMode=WireframeMode,
+    DebugViewMode=DebugViewMode,
+    DumpFailedShaders=DumpFailedShaders,
+    GatherTimeStat=GatherTimeStats
 )
-
-
-H3DPartEffRes = namedtuple(
-    'H3DPartEffRes',
-    (
-	    'ParticleElem '
-	    'ChanMoveVelElem '
-	    'ChanRotVelElem '
-	    'ChanSizeElem '
-	    'ChanColRElem '
-	    'ChanColGElem '
-	    'ChanColBElem '
-	    'ChanColAElem '
-	    'PartLifeMinF '
-	    'PartLifeMaxF '
-	    'ChanStartMinF '
-	    'ChanStartMaxF '
-	    'ChanEndRateF '
-	    'ChanDragElem '
-    )
+h3dResTypes = SimpleNamespace(
+    Undefined=Undefined,
+    SceneGraph=SceneGraph,
+    Geometry=Geometry,
+    Animation=Animation,
+    Material=Material,
+    Code=Code,
+    Shader=Shader,
+    Texture=Texture,
+    ParticleEffect=ParticleEffect,
+    Pipeline=Pipeline,
 )
-
-H3DOptions = namedtuple(
-    'H3DOptions',
-    (
-        'MaxLogLevel '
-        'MaxNumMessages '
-        'TrilinearFiltering '
-        'MaxAnisotropy '
-        'TexCompression '
-        'SRGBLinearization '
-        'LoadTextures '
-        'FastAnimation '
-        'ShadowMapSize '
-        'SampleCount '
-        'WireframeMode '
-        'DebugViewMode '
-        'DumpFailedShaders '
-        'GatherTimeStats'
-    )
+h3dNodeTypes = SimpleNamespace(
+    Undefined=Undefined,
+    Group=Group,
+    Model=Model,
+    Mesh=Mesh,
+    Joint=Joint,
+    Light=Light,
+    Camera=Camera,
+    Emitter=Emitter,
 )
-
-H3DResTypes = namedtuple(
-    'H3DResTypes',
-    (
-        'Undefined '
-        'SceneGraph '
-        'Geometry '
-        'Animation '
-        'Material '
-        'Code '
-        'Shader '
-        'Texture '
-        'ParticleEffect '
-	    'Pipeline'
-    )
+h3dNodeFlags = SimpleNamespace(
+    NoDraw=NoDraw,
+    NoCastShadow=NoCastShadow,
+    NoRayQuery=NoRayQuery,
+    Inactive=Inactive,
 )
-
-H3DNodeTypes = namedtuple(
-    'H3DNodeTypes',
-    (
-        'Undefined '
-        'Group '
-        'Model '
-        'Mesh '
-        'Joint '
-        'Light '
-        'Camera '
-        'Emitter'
-    )
+h3dLight = SimpleNamespace(
+    MatRes=MatRes,
+    RadiusF=RadiusF,
+    FovF=FovF,
+    ColorF3=ColorF3,
+    ColorMultiplierF=ColorMultiplierF,
+    ShadowMapCountI=ShadowMapCountI,
+    ShadowSplitLambdaF=ShadowSplitLambdaF,
+    ShadowMapBiasF=ShadowMapBiasF,
+    LightingContextStr=LightingContextStr,
+    ShadowContextStr=ShadowContextStr,
 )
-
-H3DNodeFlags = namedtuple(
-    'H3DNodeFlags',
-    (
-        'NoDraw '
-        'NoCastShadow '
-        'NoRayQuery '
-        'Inactive'
-    )
+h3dCamera = SimpleNamespace(
+    PipeResI=PipeResI,
+    OutTexResI=OutTexResI,
+    OutBufIndexI=OutBufIndexI,
+    LeftPlaneF=LeftPlaneF,
+    RightPlaneF=RightPlaneF,
+    BottomPlaneF=BottomPlaneF,
+    TopPlaneF=TopPlaneF,
+    NearPlaneF=NearPlaneF,
+    FarPlaneF=FarPlaneF,
+    ViewportXI=ViewportXI,
+    ViewportYI=ViewportYI,
+    ViewportWidthI=ViewportWidthI,
+    ViewportHeightI=ViewportHeightI,
+    OrthoI=OrthoI,
+    OccCullingI=OccCullingI,
 )
-
-H3DLight = namedtuple(
-    'H3DLight',
-    (
-        'MatResI '
-        'RadiusF '
-        'FovF '
-        'ColorF3 '
-        'ColorMultiplierF '
-        'ShadowMapCountI '
-        'ShadowSplitLambdaF '
-        'ShadowMapBiasF '
-        'LightingContextStr '
-        'ShadowContextStr '
-    )
+h3dPartEffRes = SimpleNamespace(
+    ParticleElem=ParticleElem,
+    ChanMoveVelElem=ChanMoveVelElem,
+    ChanRotVelElem=ChanRotVelElem,
+    ChanSizeElem=ChanSizeElem,
+    ChanColRElem=ChanColRElem,
+    ChanColGElem=ChanColGElem,
+    ChanColBElem=ChanColBElem,
+    ChanColAElem=ChanColAElem,
+    PartLifeMinF=PartLifeMinF,
+    PartLifeMaxF=PartLifeMaxF,
+    ChanStartMinF=ChanStartMinF,
+    ChanStartMaxF=ChanStartMaxF,
+    ChanEndRateF=ChanEndRateF,
+    ChanDragElem=ChanDragElem,
 )
-
-H3DCamera = namedtuple(
-    'H3DCamera',
-    (
-        'PipeResI '
-        'OutTexResI '
-        'OutBufIndexI '
-        'LeftPlaneF '
-        'RightPlaneF '
-        'BottomPlaneF '
-        'TopPlaneF '
-        'NearPlaneF '
-        'FarPlaneF '
-        'ViewportXI '
-        'ViewportYI '
-        'ViewportWidthI '
-        'ViewportHeightI '
-        'OrthoI '
-        'OccCullingI '
-    )
+h3dEmitter = SimpleNamespace(
+    MatResI=MatResI,
+    PartEffResI=PartEffResI,
+    MaxCountI=MaxCountI,
+    RespawnCountI=RespawnCountI,
+    DelayF=DelayF,
+    EmissionRateF=EmissionRateF,
+    SpreadAngleF=SpreadAngleF,
+    ForceF3=ForceF3,
 )
 
 
@@ -160,118 +128,6 @@ cdef class PyHorde3D:
         else:
             print('OpenGL version must be either 2 or 4')
             assert False
-
-        # Root node to Horde3D scene.
-        self.h3dRootNode = H3DRootNode
-
-        # Expose constants to Python.
-        self.h3dRenderDevice = H3DRenderDevice(OpenGL2, OpenGL4)
-        self.h3dModelUpdateFlags = H3DModelUpdateFlags(Animation, Geometry)
-        self.h3dOptions = H3DOptions(
-            MaxLogLevel,
-            MaxNumMessages,
-            TrilinearFiltering,
-            MaxAnisotropy,
-            TexCompression,
-            SRGBLinearization,
-            LoadTextures,
-            FastAnimation,
-            ShadowMapSize,
-            SampleCount,
-            WireframeMode,
-            DebugViewMode,
-            DumpFailedShaders,
-            GatherTimeStats
-        )
-        self.h3dResTypes = H3DResTypes(
-            Undefined,
-            SceneGraph,
-            Geometry,
-            Animation,
-            Material,
-            Code,
-            Shader,
-            Texture,
-            ParticleEffect,
-	        Pipeline,
-        )
-
-        self.h3dNodeTypes = H3DNodeTypes(
-            Undefined,
-            Group,
-            Model,
-            Mesh,
-            Joint,
-            Light,
-            Camera,
-            Emitter,
-        )
-
-        self.h3dNodeFlags = H3DNodeFlags(
-            NoDraw,
-            NoCastShadow,
-            NoRayQuery,
-            Inactive,
-        )
-
-        self.h3dLight = H3DLight(
-	        MatRes,
-	        RadiusF,
-	        FovF,
-	        ColorF3,
-	        ColorMultiplierF,
-	        ShadowMapCountI,
-	        ShadowSplitLambdaF,
-	        ShadowMapBiasF,
-	        LightingContextStr,
-	        ShadowContextStr,
-        )
-
-        self.h3dCamera = H3DCamera(
-		    PipeResI,
-		    OutTexResI,
-		    OutBufIndexI,
-		    LeftPlaneF,
-		    RightPlaneF,
-		    BottomPlaneF,
-		    TopPlaneF,
-		    NearPlaneF,
-		    FarPlaneF,
-		    ViewportXI,
-		    ViewportYI,
-		    ViewportWidthI,
-		    ViewportHeightI,
-		    OrthoI,
-		    OccCullingI,
-        )
-
-        self.h3dPartEffRes = H3DPartEffRes(
-	        ParticleElem,
-	        ChanMoveVelElem,
-	        ChanRotVelElem,
-	        ChanSizeElem,
-	        ChanColRElem,
-	        ChanColGElem,
-	        ChanColBElem,
-	        ChanColAElem,
-	        PartLifeMinF,
-	        PartLifeMaxF,
-	        ChanStartMinF,
-	        ChanStartMaxF,
-	        ChanEndRateF,
-	        ChanDragElem,
-        )
-
-        self.h3dEmitter = H3DEmitter(
-            MatResI,
-            PartEffResI,
-            MaxCountI,
-            RespawnCountI,
-            DelayF,
-            EmissionRateF,
-            SpreadAngleF,
-            ForceF3,
-        )
 
     def __dealloc__(self):
         h3dRelease()
