@@ -118,7 +118,7 @@ cpdef releaseEGLContext(unsigned long ctx):
     releaseEGL(eglDpy)
 
 
-cdef class PyHorde3D:
+cdef class Engine:
     def __init__(self, width=512, height=512, int GLVersion=2):
         # Initialise Horde engine with selected OpenGL version.
         if GLVersion == 2:

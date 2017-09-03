@@ -5,7 +5,7 @@ __version__ = '0.4.0'
 
 
 # This is the Cython wrapped engine.
-PyHorde3D = pyhorde.PyHorde3D
+PyHorde3D = pyhorde.Engine
 
 createEGLContext = pyhorde.createEGLContext
 releaseEGLContext = pyhorde.releaseEGLContext
