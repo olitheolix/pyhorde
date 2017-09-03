@@ -102,7 +102,7 @@ def main():
     ]
 
     setup(
-        name='pyhorde_cython',
+        name='pyhorde',
         version='0.4.0',
         description="Wrapper for Horde3D",
         long_description="",
