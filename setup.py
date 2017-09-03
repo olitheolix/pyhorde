@@ -109,7 +109,7 @@ def main():
         author="Oliver Nagy",
         author_email='olitheolix@gmail.com',
         url='https://github.com/olitheolix/pyhorde',
-        packages=['pyhorde3d'],
+        packages=['pyhorde'],
         include_package_data=True,
         scripts=['scripts/h3d_base_demo.py'],
         license='Apache Software License 2.0',
