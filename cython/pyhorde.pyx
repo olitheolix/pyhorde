@@ -138,14 +138,14 @@ H3DCamera = namedtuple(
 )
 
 
-cpdef createEGLContext(width, height):
+cpdef createEGLContext(int width, int height):
     cdef EGLDisplay eglDpy = initEGL(width, height)
     cdef unsigned long c_handle = <unsigned long>eglDpy
     assert eglDpy != NULL
     return int(c_handle)
 
 
-cpdef releaseEGLContext(ctx):
+cpdef releaseEGLContext(unsigned long ctx):
     cdef EGLDisplay eglDpy = <EGLDisplay>ctx
     releaseEGL(eglDpy)
 
